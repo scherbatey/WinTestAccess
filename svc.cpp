@@ -26,6 +26,8 @@ VOID SvcInit( DWORD, LPTSTR * );
 VOID SvcReportEvent( LPTSTR );
 VOID SvcReportWarning(std::string msg);
 
+std::string GetErrorAsString(DWORD errorMessageID);
+
 std::string log_file_name;
 std::string cfg_file_name;
 int counter = 0;
@@ -38,7 +40,7 @@ void InitTest()
 
 	if( !GetModuleFileName( NULL, szPath, MAX_PATH ) )
 	{
-		printf("Cannot install service (%d)\n", GetLastError());
+		printf("Cannot install service (%s)\n", GetErrorAsString(GetLastError()).c_str());
 		return;
 	}
 	log_file_name = szPath + std::string(".log");;
@@ -136,7 +138,7 @@ void __cdecl _tmain(int argc, TCHAR *argv[])
 
     if( lstrcmpi( argv[1], TEXT("install")) == 0 )
     {
-		const char * user_name = argc >= 3 ? argv[2] : "NT AUTHORITY\\NetworkService";
+		const char * user_name = argc >= 3 ? argv[2] : NULL;
         SvcInstall(user_name);
         return;
     }
@@ -191,7 +193,7 @@ VOID SvcInstall(const char * user_name)
 
     if( !GetModuleFileName( NULL, szPath, MAX_PATH ) )
     {
-        printf("Cannot install service (%d)\n", GetLastError());
+        printf("Cannot install service (%s)\n", GetErrorAsString(GetLastError()).c_str());
         return;
     }
 
@@ -204,7 +206,7 @@ VOID SvcInstall(const char * user_name)
  
     if (NULL == schSCManager) 
     {
-        printf("OpenSCManager failed (%d)\n", GetLastError());
+        printf("OpenSCManager failed (%s)\n", GetErrorAsString(GetLastError()).c_str());
         return;
     }
 
@@ -227,7 +229,7 @@ VOID SvcInstall(const char * user_name)
  
     if (schService == NULL) 
     {
-        printf("CreateService failed (%d)\n", GetLastError()); 
+        printf("CreateService failed (%s)\n", GetErrorAsString(GetLastError()).c_str()); 
         CloseServiceHandle(schSCManager);
         return;
     }
@@ -432,7 +434,7 @@ VOID SvcReportEvent(LPTSTR szFunction)
 
     if( NULL != hEventSource )
     {
-        StringCchPrintf(Buffer, 80, TEXT("%s failed with %d"), szFunction, GetLastError());
+        StringCchPrintf(Buffer, 80, TEXT("%s failed with error: %s\n"), szFunction, GetErrorAsString(GetLastError()).c_str());
 
         lpszStrings[0] = SVCNAME;
         lpszStrings[1] = Buffer;
@@ -466,7 +468,7 @@ VOID SvcRemove()
  
     if (NULL == schSCManager) 
     {
-        printf("OpenSCManager failed (%d)\n", GetLastError());
+        printf("OpenSCManager failed (%d)\n", GetErrorAsString(GetLastError()).c_str());
         return;
     }
 
@@ -479,7 +481,7 @@ VOID SvcRemove()
  
     if (schService == NULL)
     { 
-        printf("OpenService failed (%d)\n", GetLastError()); 
+        printf("OpenService failed (%s)\n", GetErrorAsString(GetLastError()).c_str()); 
         CloseServiceHandle(schSCManager);
         return;
     }
@@ -488,7 +490,7 @@ VOID SvcRemove()
  
     if (! DeleteService(schService) ) 
     {
-        printf("DeleteService failed (%d)\n", GetLastError()); 
+        printf("DeleteService failed (%s)\n", GetErrorAsString(GetLastError()).c_str()); 
     }
     else printf("Service deleted successfully\n"); 
  
